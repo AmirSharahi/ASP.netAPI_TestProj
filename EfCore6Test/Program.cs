@@ -1,5 +1,7 @@
 using EfCore6Test.Data;
+using EfCore6Test.Minimal_API_Logic;
 using Microsoft.EntityFrameworkCore;
+using System.Net;
 
 internal class Program
 {
@@ -23,6 +25,7 @@ internal class Program
             app.UseSwagger();
             app.UseSwaggerUI();
         }
+        
 
         app.UseHttpsRedirection();
 

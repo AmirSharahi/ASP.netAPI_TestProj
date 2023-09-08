@@ -2,6 +2,7 @@
 using EfCore6Test.Data;
 using EfCore6Test.Models;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.EntityFrameworkCore;
 
 namespace EfCore6Test.Controllers
 {
@@ -9,63 +10,76 @@ namespace EfCore6Test.Controllers
     [Route("Api/[Controller]/")]
     public class LoginController : Controller
     {
-        private TestContext _dbContext { get; set; }
+        public TestContext _dbContext { get; set; }
+        public LoginController(TestContext db)
+        {
+            _dbContext = db;
+        }
 
         [HttpGet]
         [Route("api/[controller]")]
-        public IActionResult login(string userName , [FromBody] string password)
+        public IActionResult login(string userName, string password)
         {
-            try
+            if (userName == null && password == null)
+                return StatusCode((int)HttpStatusCode.BadRequest);
+
+            if (!_dbContext.Users.Any(u => u.Username == userName))
+                return StatusCode((int)HttpStatusCode.NotFound);
+
+            var userR = _dbContext.Users.Single(u => u.Username == userName);
+            
+            //var userR = _dbContext.Users.Include(u => u.Role).Single(u => u.Username == userName);
+
+            if (userR.Password != password)
+                return StatusCode((int)HttpStatusCode.NotFound);
+
+            if (userR.Password == password)
             {
-                if (userName == null && password == null)
-                    return StatusCode((int)HttpStatusCode.BadRequest);
-
-                if (!_dbContext.Users.Any(u => u.Username == userName))
-                    return StatusCode((int)HttpStatusCode.NotFound);
-
-                var user = _dbContext.Users.Single(u => u.Username == userName);
-                var userRole = _dbContext.Roles.Single(r =>
-                    r.Users.Single(u => u.Username == user.Username).Username == userName);
-
-                if (user.Password != password)
-                    return StatusCode((int)HttpStatusCode.NotFound);
-
-                if (user.Password == password)
-                {
-                    user.LastLoginTime = DateTime.Now;
-                    return StatusCode((int)HttpStatusCode.OK);
-                }
-
-                return StatusCode((int)HttpStatusCode.InternalServerError, new { user , userRole });
+                userR.LastLoginTime = DateTime.Now;
+                _dbContext.SaveChanges();
+                return StatusCode((int)HttpStatusCode.OK , userR);
             }
-            catch (Exception e)
-            {
-                return StatusCode((int)HttpStatusCode.InternalServerError);
-            }
+
+            return StatusCode((int)HttpStatusCode.InternalServerError);
         }
+
+        //[HttpGet]
+        //[Route("api/[controller]")]
+        //public IActionResult ValidateUser(string userName, int otp)
+        //{
+        //    if (userName == null && otp == null)
+        //        return StatusCode((int)HttpStatusCode.BadRequest);
+
+        //    if (!_dbContext.Users.Any(u => u.Username == userName))
+        //        return StatusCode((int)HttpStatusCode.NotFound);
+
+        //    if (_dbContext.Users.Any(u => u.Username == userName) && otp == 93)
+        //        return StatusCode((int)HttpStatusCode.OK);
+
+        //    return StatusCode((int)HttpStatusCode.InternalServerError);
+        //}
 
         [HttpPut]
         [Route("api/[controller]")]
-        public IActionResult ResetPass(string userName, [FromBody] int otp)
+        public IActionResult ResetPass(string userName, [FromBody] string pass)
         {
             try
             {
-                if (userName == null && otp == null)
+                if (userName == null && pass == null)
                     return StatusCode((int)HttpStatusCode.BadRequest);
 
                 if (!_dbContext.Users.Any(u => u.Username == userName))
                     return StatusCode((int)HttpStatusCode.NotFound);
-                
-                if (_dbContext.Users.Any(u => u.Username == userName) && otp == 93)
-                    _dbContext.Users.Update(_dbContext.Users.Single(u => u.Username == userName));
 
-                return StatusCode((int)HttpStatusCode.InternalServerError);
+                _dbContext.Users.Single(u => u.Username == userName).Password = pass;
+                _dbContext.SaveChanges();
+
+                return StatusCode((int)HttpStatusCode.OK);
             }
-            catch (Exception e)
+            catch (Exception ex)
             {
                 return StatusCode((int)HttpStatusCode.InternalServerError);
             }
-
         }
     }
 }

@@ -1,5 +1,4 @@
 using EfCore6Test.Data;
-using EfCore6Test.Minimal_API_Logic;
 using Microsoft.EntityFrameworkCore;
 using System.Net;
 

@@ -1,3 +1,0 @@
-﻿<Project>
-  <Import Project="..\build\EfCore6Test.props" />
-</Project>

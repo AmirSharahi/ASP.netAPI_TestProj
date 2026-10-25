@@ -107,9 +107,3 @@ namespace EfCore6Test.Controllers
         }
     }
 }
-
-
-//www.blyat.com/api/test/getuser?userid=10
-//www.blyat.com/api/test/insertuser [Body]
-//www.blyat.com/api/test/updateuser?userid=10 [Body]
-//www.blyat.com/api/test/deleteuser?userid=10
